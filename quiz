@@ -1,1 +1,5 @@
-print 'This is to test the change';
+use feature'say';
+say 'This is a math quiz to test your abliltes';
+print 'To start would you like the basic(+ and -) version or the advanced(* and /) version? ';
+my $ver=<STDIN>;
+print $ver; 
