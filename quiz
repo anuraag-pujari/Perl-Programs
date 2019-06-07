@@ -1,5 +1,33 @@
 use feature "say";
 say 'This is a math quiz to test your abliltes';
-print 'To start would you like the basic(+ and -) version or the advanced(* and /) version? ';
-my $ver=<STDIN>;
-print $ver; 
+print 'To start how many questions would you like to answer? ';
+my $num=<STDIN>;
+my $correct=0;
+for(my $i=0;$i<$num;$i++)
+{
+
+   my $r=int(rand 10)+1;
+   my $sum+=$r;
+   my $r1=int(rand 10)+1;
+   my $r2=int(rand 3);
+   if($r2==0)
+	{
+	 print $r.' + '.$r1.' = ';
+	 $sum+=$r1;
+	}elsif($r2==1)
+	 {
+	  print $r.' - '.$r1.' = ';
+	  $sum-=$r1;
+	 }else
+	 {
+	  print $r.' * '.$r1. ' = ';
+	 $sum*=$r1;
+	 }
+	my $ans=<STDIN>;
+	say '';
+if ($ans==$sum)
+{
+$correct++;
+}
+}
+print 'You got '.$correct.' out of '.$num.' correct.'; 
