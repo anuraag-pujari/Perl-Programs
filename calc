@@ -1,0 +1,41 @@
+use feature "say";
+say 'This is a weight converstion calculator!!';
+print 'What would you like to convert: Pounds(lbs),Kilograms(kg),Stone(st),Gram(g),ounce(oz): ';
+my $first=<STDIN>;
+print 'What number do you wish to convert: ';
+my $num=<STDIN>;
+print 'What would you like to convert to: ';
+my $second=<STDIN>;
+print $first;
+print $second;
+print $num;
+$kg="kg";
+$lbs="lbs";
+$g="g";
+$oz="oz";
+$st="st";
+if($first eq $lbs)
+{
+  if($second eq $kg)
+	 {
+		
+		my $tot=$num/2.205;
+		print $tot;
+	}elsif($second eq $st)
+	{
+	
+		my $tot=$num/14;
+		print $tot;
+	}elsif($second eq $g)
+	{
+		
+		my $tot=$num*453.592;
+		print $tot;	
+	}elsif($second eq $oz)
+	{
+		
+		my $tot=16*$num;
+		print $tot;	
+	}
+			
+}
