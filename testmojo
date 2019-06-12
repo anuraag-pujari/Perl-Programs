@@ -25,7 +25,8 @@ __DATA__
 <html>
 
 <head>
-	<title>Line Chart</title>
+	<title>Data For Call Logs</title>
+	<H1>Data For Calls Logs</H1>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
 	<script src="Chart.min.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
 	<script src="utils.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
@@ -44,7 +45,7 @@ __DATA__
 	</div>
 	<br>
 	<br>
-	<button id="PreviousDay">Previous Day</button>
+	<button id="previousDay">Previous Day</button>
 	<button id="nextDay">Next Day</button>
 	<script type="f43633757f96d18c5e98ef24-text/javascript">
 		var timeFormat = 'MM/DD/YYYY HH:mm';
@@ -164,5 +165,7 @@ __DATA__
 		});
 	</script>
 <script src="https://ajax.cloudflare.com/cdn-cgi/scripts/a2bd7673/cloudflare-static/rocket-loader.min.js" data-cf-settings="f43633757f96d18c5e98ef24-|49" defer=""></script></body>
-
+<php
+echo "Test for the php to work";
+?>
 </html>
