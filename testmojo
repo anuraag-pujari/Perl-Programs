@@ -1,12 +1,21 @@
 #!/usr/bin/env perl
-use Mojo::JSON qw(decode_json encode_json);
+use Mojo::JSON'j';
 use Mojolicious::Lite;
 
 get '/:date' => sub {
   my $c = shift;
   $c->render(template => 'chart', datasets => 'abc');
 };
+gub {
+  my $c = shift;
+  my $abc = abc(1, 2, 3, 4, 5);
+  $c->render(template => 'index', datasets => $abc);
+};
 
+sub abc {
+  my ($a, $b, $c) = @_;
+  return [$a, $b, $c];
+}
 app->start;
 __DATA__
 
