@@ -76,7 +76,16 @@ __DATA__
 </html>
 
 @@ index.html.ep
-abc
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title></head>
+  <body> 
+    %= form_for upload => (enctype => 'multipart/form-data') => begin
+      %= file_field 'fileupload'
+      %= submit_button 'Upload'
+    % end
+  </body>
+</html>
 
 @@ chart.html.ep
 % layout 'default';
