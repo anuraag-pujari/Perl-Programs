@@ -1,0 +1,228 @@
+use Mojolicious::Lite;
+
+use Mojo::ByteStream 'b';
+use Mojo::Collection;
+use Mojo::CSV;
+use Mojo::JSON 'j';
+use Mojo::Util qw(dumper sha1_sum);
+
+use List::MoreUtils qw(first_index);
+use Time::Piece;
+
+our ($SEED, $COUNTER) = ($$ . time . rand, int rand 0xffffff);
+our $last = [undef. undef];
+
+get '/' => 'index';
+
+get '/:date' => sub {
+  my $c = shift;
+  my $output = output();
+  $c->render(template => 'chart', datasets => $output);
+};
+
+sub output {
+my $data = shift;
+  my $R;
+  my @r;
+
+
+  $data->each(sub {
+    chomp;
+    my ($id, $date, $from, $to, undef, $length) = split /\t/;
+    my ($r) = ("$from$to" =~ /\((\d{4})\)/);
+    next unless $r =~ /^2/;
+    my ($index) = ($r =~ /(\d)$/);
+    $date = Time::Piece->strptime($date, '%c');
+    push @{$R->{$r}->{$date->ymd}}, {x => $date->cdate, y => $index};
+    push @{$R->{$r}->{$date->ymd}}, {x => ($date + _hms($length))->cdate, y => $index};
+    push @{$R->{$r}->{$date->ymd}}, {x => ($date + _hms($length) + 1)->cdate, y => 0};
+  });
+  my @color = qw(aaa green red bbb blue bbb black orange);
+  foreach my $r ( sort { $a <=> $b } keys %$R ) {
+    unshift @{$R->{$r}->{$ARGV[0]}}, {x => Time::Piece->strptime(sprintf('%sT07:30:00', $ARGV[0]), '%Y-%m-%dT%H:%M:%S'), y => 0};
+    push @{$R->{$r}->{$ARGV[0]}}, {x => Time::Piece->strptime(sprintf('%sT17:00:00', $ARGV[0]), '%Y-%m-%dT%H:%M:%S'), y => 0};
+    my ($index) = ($r =~ /(\d)$/);
+    my $color = $color[$index];
+    my $out = <<END;
+  {
+    label: '$r',
+    steppedLine: true,
+    backgroundColor: color(window.chartColors.$color).alpha(0.5).rgbString(),
+    borderColor: window.chartColors.$color,
+    fill: false,
+    data: [
+END
+    $out .= join ',', map { sprintf("{\nx: moment(\"%s\"),\ny: %s\n}", $_->{x}, $_->{y}) } @{$R->{$r}->{$ARGV[0]}};
+    #say j($R->{$r}->{'2019-05-22'});
+    $out=~s/\}\{/\},\{/g;
+  }  
+}
+
+sub _hms { return 0 unless $_[0]; @_ = split /:/, shift; $_[0]*3600+$_[1]*60+($_[2]||0) }
+
+sub hms2s { my $hms = b(shift)->split(":"); @$hms[0]*3600 + @$hms[1]*60 + @$hms[2] }
+
+sub new_id { substr sha1_sum($SEED . ($COUNTER = ($COUNTER +1) % 0xffffff)), 0, 8 }
+
+app->start;
+
+__DATA__
+
+@@ layouts/default.html.ep
+<!DOCTYPE html>
+<html>
+  <head><title><%= title %></title></head>
+  <body><%= content %></body>
+</html>
+
+@@ index.html.ep
+abc
+
+@@ chart.html.ep
+% layout 'default';
+% title 'Welcome';
+<!-- saved from url=(0060)https://www.chartjs.org/samples/latest/scales/time/line.html -->
+<!doctype html>
+<html>
+<head>
+	<title>Data For Call Logs</title>
+	<H1>Data For Calls Logs</H1>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
+	<script src="Chart.min.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
+	<script src="utils.js" type="f43633757f96d18c5e98ef24-text/javascript"></script>
+	<style>
+		canvas {
+			-moz-user-select: none;
+			-webkit-user-select: none;
+			-ms-user-select: none;
+		}
+	</style>
+</head>
+
+<body>
+	<div style="width:75%;">
+		<canvas id="canvas"></canvas>
+	</div>
+	<br>
+	<br>
+	<button id="previousDay">Previous Day</button>
+	<button id="nextDay">Next Day</button>
+	<script type="f43633757f96d18c5e98ef24-text/javascript">
+		var timeFormat = 'MM/DD/YYYY HH:mm';
+
+		function newDate(days) {
+			return moment().add(days, 'd').toDate();
+		}
+
+		function newDateString(days) {
+			return moment().add(days, 'd').format(timeFormat);
+		}
+
+		var color = Chart.helpers.color;
+		var config = {
+			type: 'line',
+			data: {
+				datasets: [<%= $datasets %>]
+			},
+			options: {
+				title: {
+					text: 'Chart.js Time Scale'
+				},
+				scales: {
+					xAxes: [{
+						type: 'time',
+						time: {
+							parser: timeFormat,
+							// round: 'day'
+							tooltipFormat: 'll HH:mm:ss'
+						},
+						scaleLabel: {
+							display: true,
+							labelString: 'Date'
+						}
+					}],
+					yAxes: [{
+						scaleLabel: {
+							display: true,
+							labelString: 'Talking'
+						}
+					}]
+				},
+			}
+		};
+
+		window.onload = function() {
+			var ctx = document.getElementById('canvas').getContext('2d');
+			window.myLine = new Chart(ctx, config);
+
+		};
+
+		document.getElementById('randomizeData').addEventListener('click', function() {
+			config.data.datasets.forEach(function(dataset) {
+				dataset.data.forEach(function(dataObj, j) {
+					if (typeof dataObj === 'object') {
+						dataObj.y = randomScalingFactor();
+					} else {
+						dataset.data[j] = randomScalingFactor();
+					}
+				});
+			});
+
+			window.myLine.update();
+		});
+
+		var colorNames = Object.keys(window.chartColors);
+		document.getElementById('addDataset').addEventListener('click', function() {
+			var colorName = colorNames[config.data.datasets.length % colorNames.length];
+			var newColor = window.chartColors[colorName];
+			var newDataset = {
+				label: 'Dataset ' + config.data.datasets.length,
+				borderColor: newColor,
+				backgroundColor: color(newColor).alpha(0.5).rgbString(),
+				data: [],
+			};
+
+			for (var index = 0; index < config.data.labels.length; ++index) {
+				newDataset.data.push(randomScalingFactor());
+			}
+
+			config.data.datasets.push(newDataset);
+			window.myLine.update();
+		});
+
+		document.getElementById('addData').addEventListener('click', function() {
+			if (config.data.datasets.length > 0) {
+				config.data.labels.push(newDate(config.data.labels.length));
+
+				for (var index = 0; index < config.data.datasets.length; ++index) {
+					if (typeof config.data.datasets[index].data[0] === 'object') {
+						config.data.datasets[index].data.push({
+							x: newDate(config.data.datasets[index].data.length),
+							y: randomScalingFactor(),
+						});
+					} else {
+						config.data.datasets[index].data.push(randomScalingFactor());
+					}
+				}
+
+				window.myLine.update();
+			}
+		});
+
+		document.getElementById('removeDataset').addEventListener('click', function() {
+			config.data.datasets.splice(0, 1);
+			window.myLine.update();
+		});
+
+		document.getElementById('removeData').addEventListener('click', function() {
+			config.data.labels.splice(-1, 1); // remove the label first
+
+			config.data.datasets.forEach(function(dataset) {
+				dataset.data.pop();
+			});
+
+			window.myLine.update();
+
+<script src="https://ajax.cloudflare.com/cdn-cgi/scripts/a2bd7673/cloudflare-static/rocket-loader.min.js" data-cf-settings="f43633757f96d18c5e98ef24-|49" defer=""></script></body>
+<?php
+</html>
